@@ -1,4 +1,4 @@
-package com.example.enemcompose
+package com.example.enemcompose.screens
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -17,6 +17,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.enemcompose.*
+import com.example.enemcompose.components.MyBottomNavigation
+import com.example.enemcompose.components.PrimaryButton
+import com.example.enemcompose.components.SecondaryButton
 import com.example.enemcompose.ui.theme.darkBlue
 import com.example.enemcompose.ui.theme.primaryBlue
 import com.example.enemcompose.ui.theme.secondaryBlue
@@ -25,6 +29,10 @@ import com.example.enemcompose.ui.theme.white
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController) {
+    fun navigateToQuestion(){
+        navController.navigate(Screen.QuestionScreen.route)
+    }
+
     Scaffold(
         bottomBar = {
             Column() {
@@ -34,7 +42,7 @@ fun HomeScreen(navController: NavController) {
                         .fillMaxWidth()
                         .height(2.dp)
                 )
-                MyBottomNavigation()
+                MyBottomNavigation(navController = navController)
             }
         },
         content = {paddingValues ->
@@ -105,7 +113,7 @@ fun HomeScreen(navController: NavController) {
                         }
                     }
                     Spacer(modifier = Modifier.height(24.dp))
-                    PrimaryButton(text = "Gerar Perguntas", click = {})
+                    PrimaryButton(text = "Gerar Perguntas", click = { navigateToQuestion() })
                     Spacer(modifier = Modifier.height(8.dp))
                     SecondaryButton(text = "Gerar Perguntas Aleatoriamente", click = {})
                     Spacer(

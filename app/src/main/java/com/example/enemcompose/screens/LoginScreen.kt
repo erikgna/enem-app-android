@@ -1,43 +1,45 @@
-package com.example.enemcompose
+package com.example.enemcompose.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.enemcompose.*
+import com.example.enemcompose.components.CustomInput
+import com.example.enemcompose.components.PrimaryButton
+import com.example.enemcompose.components.SecondaryButton
 import com.example.enemcompose.ui.theme.darkBlue
 import com.example.enemcompose.ui.theme.white
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegisterScreen(navController: NavController) {
+fun LoginScreen(navController: NavController) {
     val emailState = remember { mutableStateOf("") }
-    val nameState = remember { mutableStateOf("") }
     val passwordState = remember { mutableStateOf("") }
-    val confirmPasswordState = remember { mutableStateOf("") }
 
-    fun navigateToLogin() {
-        navController.navigate(Screen.LoginScreen.route) {
-            popUpTo(Screen.RegisterScreen.route) {
+    fun navigateToRegister() {
+        navController.navigate(Screen.RegisterScreen.route) {
+            popUpTo(Screen.LoginScreen.route) {
                 inclusive = true
             }
         }
     }
 
     Scaffold(
-        content = {paddingValue ->
-            Box(modifier = Modifier.background(darkBlue).padding(paddingValue)) {
+        content = {paddingValues ->
+            Box(modifier = Modifier.background(darkBlue).padding(paddingValues)) {
                 Column(
                     verticalArrangement = Arrangement.Center,
                     modifier = Modifier
@@ -48,25 +50,18 @@ fun RegisterScreen(navController: NavController) {
                     Logo()
                     Spacer(modifier = Modifier.height(64.dp))
                     Text(
-                        text = "Registro",
+                        text = "Login",
                         fontSize = 30.sp,
                         fontWeight = FontWeight.Bold,
                         color = white
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Crie uma conta para ter acesso ao seu histórico de questões",
+                        text = "Entre na sua conta para continuar",
                         fontSize = 16.sp,
                         color = white
                     )
                     Spacer(modifier = Modifier.height(32.dp))
-                    CustomInput(
-                        iconDescription = "Name Icon",
-                        icon = Icons.Rounded.Person,
-                        hint = "Nome Completo",
-                        changeString = nameState
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
                     CustomInput(
                         iconDescription = "Email icon",
                         icon = Icons.Rounded.Email,
@@ -82,21 +77,39 @@ fun RegisterScreen(navController: NavController) {
                         changeString = passwordState,
                         keyboard = KeyboardType.Password
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    CustomInput(
-                        iconDescription = "Confirm password icon",
-                        icon = Icons.Rounded.Lock,
-                        hint = "Confirmar Senha",
-                        changeString = confirmPasswordState,
-                        keyboard = KeyboardType.Password
-                    )
                     Spacer(modifier = Modifier.height(24.dp))
-                    PrimaryButton(text = "Registrar", click = {})
+                    PrimaryButton(text = "Entrar", click = {})
                     Spacer(modifier = Modifier.height(16.dp))
                     ButtonDivider()
                     Spacer(modifier = Modifier.height(16.dp))
-                    SecondaryButton(text = "Entrar na conta", click = { navigateToLogin() })
+                    SecondaryButton(text = "Criar nova conta", click = { navigateToRegister() })
                 }
             }
         })
+}
+
+@Composable
+fun ButtonDivider() {
+    Row(
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .background(color = white)
+                .fillMaxWidth(.47f)
+                .height(2.dp)
+        )
+        Text(
+            text = "ou",
+            color = white,
+            modifier = Modifier.padding(horizontal = 4.dp)
+        )
+        Box(
+            modifier = Modifier
+                .background(color = white)
+                .fillMaxWidth(1f)
+                .height(2.dp)
+        )
+    }
 }

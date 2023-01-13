@@ -1,4 +1,4 @@
-package com.example.enemcompose
+package com.example.enemcompose.screens
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -13,15 +13,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.example.enemcompose.components.MyBottomNavigation
+import com.example.enemcompose.components.PrimaryButton
 import com.example.enemcompose.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@Preview
-fun HistoryScreen() {
+fun HistoryScreen(navController: NavController) {
     Scaffold(
         bottomBar = {
             Column() {
@@ -31,7 +32,7 @@ fun HistoryScreen() {
                         .fillMaxWidth()
                         .height(2.dp)
                 )
-                MyBottomNavigation()
+                MyBottomNavigation(navController = navController)
             }
         },
         content = { paddingValues ->
@@ -116,7 +117,7 @@ fun HistoryItem(myColor: Color, text: String) {
             .padding(bottom = 16.dp)
             .border(
                 border = BorderStroke(2.dp, myColor),
-                shape = RoundedCornerShape(50.dp),
+                shape = RoundedCornerShape(5.dp),
             )
             .fillMaxWidth()
     ) {

@@ -1,4 +1,4 @@
-package com.example.enemcompose
+package com.example.enemcompose.components
 
 import androidx.compose.foundation.BorderStroke
 

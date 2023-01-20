@@ -24,7 +24,6 @@ import com.example.enemcompose.Screen
 import com.example.enemcompose.components.SecondaryButton
 import com.example.enemcompose.ui.theme.darkBlue
 import com.example.enemcompose.ui.theme.white
-import com.example.enemcompose.view.model.teste
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,8 +33,7 @@ fun MainScreen(navController: NavController) {
     }
 
     fun navigateToLogin() {
-        teste()
-        //navController.navigate(Screen.LoginScreen.route)
+        navController.navigate(Screen.LoginScreen.route)
     }
 
     fun navigateToHome() {

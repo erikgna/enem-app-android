@@ -6,9 +6,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -22,10 +20,14 @@ import com.example.enemcompose.components.PrimaryButton
 import com.example.enemcompose.components.SecondaryButton
 import com.example.enemcompose.ui.theme.darkBlue
 import com.example.enemcompose.ui.theme.white
+import com.example.enemcompose.view.model.LoginViewModel
+import com.example.enemcompose.view.model.QuestionViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(navController: NavController) {
+fun LoginScreen(navController: NavController, viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
+    val uiState by viewModel.uiState.collectAsState()
+
     val emailState = remember { mutableStateOf("") }
     val passwordState = remember { mutableStateOf("") }
 
@@ -78,7 +80,7 @@ fun LoginScreen(navController: NavController) {
                         keyboard = KeyboardType.Password
                     )
                     Spacer(modifier = Modifier.height(24.dp))
-                    PrimaryButton(text = "Entrar", click = {})
+                    PrimaryButton(text = "Entrar", click = {viewModel.login()})
                     Spacer(modifier = Modifier.height(16.dp))
                     ButtonDivider()
                     Spacer(modifier = Modifier.height(16.dp))

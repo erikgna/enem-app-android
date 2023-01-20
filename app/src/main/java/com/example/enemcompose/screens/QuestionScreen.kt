@@ -6,7 +6,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,6 +23,8 @@ import com.example.enemcompose.components.MyBottomNavigation
 import com.example.enemcompose.components.PrimaryButton
 import com.example.enemcompose.components.SecondaryButton
 import com.example.enemcompose.ui.theme.*
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.enemcompose.view.model.QuestionViewModel
 
 data class Answer(val msg: String, val index: String)
 
@@ -44,33 +46,8 @@ fun transformTextToWidget(desc: String): ArrayList<String> {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun QuestionScreen(navController: NavController) {
-    val title = "Ciências Humanas e suas Tecnologias - QUESTÃO 25 - 2013"
-    val desc =
-        "Vida social sem internet?<br /><img src=\"https://upload.wikimedia.org/wikipedia/commons/6/69/Gold_nugget_%28Australia%29_4_%2816848647509%29.jpg\" />"
-    val ask = "A charge revela uma crítica aos meios de comunicação, em especial à internet, porque"
-    val asks = listOf(
-        Answer(
-            msg = "<img src=\"https://upload.wikimedia.org/wikipedia/commons/6/69/Gold_nugget_%28Australia%29_4_%2816848647509%29.jpg\" />",
-            index = "a"
-        ),
-        Answer(
-            msg = "considera as relações sociais como menos importantes que as virtuais.",
-            index = "b"
-        ),
-        Answer(
-            msg = "enaltece a pretensão do homem de estar em todos os lugares ao mesmo tempo.",
-            index = "c"
-        ),
-        Answer(
-            msg = "descreve com precisão as sociedades humanas no mundo globalizado.",
-            index = "d"
-        ),
-        Answer(
-            msg = "concebe a rede de computadores como o espaço mais eficaz para a construção de relações sociais.",
-            index = "e"
-        )
-    )
+fun QuestionScreen(navController: NavController, viewModel: QuestionViewModel = viewModel()) {
+    val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
         bottomBar = {
@@ -100,64 +77,74 @@ fun QuestionScreen(navController: NavController) {
                     Spacer(modifier = Modifier.height(16.dp))
                     Logo()
                     Spacer(modifier = Modifier.height(40.dp))
-                    Text(
-                        text = title,
-                        color = white,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    if (uiState.name != null) {
+                        Text(
+                            text = uiState.name!!,
+                            color = white,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                     Spacer(modifier = Modifier.height(32.dp))
-                    transformTextToWidget(desc).forEach { item ->
-                        if (item.contains("http")) {
-                            Box(
-                                modifier = Modifier
-                                    .padding(vertical = 8.dp)
-                                    .align(alignment = Alignment.CenterHorizontally)
-                            ) {
-                                AsyncImage(
+                    uiState.description?.let {
+                        transformTextToWidget(it).forEach { item ->
+                            if (item.contains("http")) {
+                                Box(
                                     modifier = Modifier
-                                        .size(300.dp)
-                                        .clip(RoundedCornerShape(8.dp)),
-                                    model = ImageRequest.Builder(LocalContext.current)
-                                        .data(item)
-                                        .crossfade(true).build(),
-                                    contentScale = ContentScale.FillBounds,
-                                    contentDescription = "Image"
-                                )
+                                        .padding(vertical = 8.dp)
+                                        .align(alignment = Alignment.CenterHorizontally)
+                                ) {
+                                    AsyncImage(
+                                        modifier = Modifier
+                                            .size(300.dp)
+                                            .clip(RoundedCornerShape(8.dp)),
+                                        model = ImageRequest.Builder(LocalContext.current)
+                                            .data(item)
+                                            .crossfade(true).build(),
+                                        contentScale = ContentScale.FillBounds,
+                                        contentDescription = "Image"
+                                    )
+                                }
+                            } else {
+                                Text(text = item, color = white, fontSize = 16.sp)
                             }
-                        } else {
-                            Text(text = item, color = white, fontSize = 16.sp)
                         }
                     }
                     Spacer(modifier = Modifier.height(16.dp))
-                    transformTextToWidget(ask).forEach { item ->
-                        if (item.contains("http")) {
-                            Box(
-                                modifier = Modifier
-                                    .padding(top = 16.dp)
-                                    .align(alignment = Alignment.CenterHorizontally)
-                            ) {
-                                AsyncImage(
+                    uiState.ask?.let {
+                        transformTextToWidget(it).forEach { item ->
+                            if (item.contains("http")) {
+                                Box(
                                     modifier = Modifier
-                                        .size(300.dp)
-                                        .clip(RoundedCornerShape(16.dp)),
-                                    model = ImageRequest.Builder(LocalContext.current)
-                                        .data(item)
-                                        .crossfade(true).build(),
-                                    contentScale = ContentScale.FillBounds,
-                                    contentDescription = "Image"
-                                )
+                                        .padding(top = 16.dp)
+                                        .align(alignment = Alignment.CenterHorizontally)
+                                ) {
+                                    AsyncImage(
+                                        modifier = Modifier
+                                            .size(300.dp)
+                                            .clip(RoundedCornerShape(16.dp)),
+                                        model = ImageRequest.Builder(LocalContext.current)
+                                            .data(item)
+                                            .crossfade(true).build(),
+                                        contentScale = ContentScale.FillBounds,
+                                        contentDescription = "Image"
+                                    )
+                                }
+                            } else {
+                                Text(text = item, color = white, fontSize = 16.sp)
                             }
-                        } else {
-                            Text(text = item, color = white, fontSize = 16.sp)
                         }
                     }
                     Spacer(modifier = Modifier.height(32.dp))
-                    asks.forEach { item ->
-                        AnswerItem(msg = item.msg, isCorrect = false, isAnswer = true)
-                    }
+
+                    uiState.answers?.let { AnswerItem(msg = it.a, isCorrect = false, isAnswer = true) }
+                    uiState.answers?.let { AnswerItem(msg = it.b, isCorrect = false, isAnswer = true) }
+                    uiState.answers?.let { AnswerItem(msg = it.c, isCorrect = false, isAnswer = true) }
+                    uiState.answers?.let { AnswerItem(msg = it.d, isCorrect = false, isAnswer = true) }
+                    uiState.answers?.let { AnswerItem(msg = it.e, isCorrect = false, isAnswer = true) }
+
                     Spacer(modifier = Modifier.height(16.dp))
-                    PrimaryButton(text = "Ver resposta", click = { })
+                    PrimaryButton(text = "Ver resposta", click = { println(uiState.answers) })
                     Spacer(modifier = Modifier.height(8.dp))
                     SecondaryButton(text = "Próxima pergunta", click = {})
                 }

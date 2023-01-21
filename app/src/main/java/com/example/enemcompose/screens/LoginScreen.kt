@@ -1,5 +1,7 @@
 package com.example.enemcompose.screens
 
+import android.annotation.SuppressLint
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -9,27 +11,51 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.enemcompose.*
 import com.example.enemcompose.components.CustomInput
 import com.example.enemcompose.components.PrimaryButton
 import com.example.enemcompose.components.SecondaryButton
+import com.example.enemcompose.factories.LoginViewModelFactory
 import com.example.enemcompose.ui.theme.darkBlue
+import com.example.enemcompose.ui.theme.red
 import com.example.enemcompose.ui.theme.white
+import com.example.enemcompose.utils.Constants
 import com.example.enemcompose.view.model.LoginViewModel
 import com.example.enemcompose.view.model.QuestionViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(navController: NavController, viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
-    val uiState by viewModel.uiState.collectAsState()
-
+fun LoginScreen(
+    navController: NavController
+) {
+    val loginViewModel: LoginViewModel =
+        viewModel(factory = LoginViewModelFactory(LocalContext.current))
+    val uiState by loginViewModel.uiState.collectAsState()
     val emailState = remember { mutableStateOf("") }
     val passwordState = remember { mutableStateOf("") }
+
+    fun callLogin() {
+        loginViewModel.login(
+            email = emailState.value,
+            password = passwordState.value
+        )
+
+        emailState.value = ""
+        passwordState.value = ""
+
+        navController.navigate(Screen.HomeScreen.route) {
+            popUpTo(Screen.HomeScreen.route) {
+                inclusive = true
+            }
+        }
+    }
 
     fun navigateToRegister() {
         navController.navigate(Screen.RegisterScreen.route) {
@@ -40,10 +66,15 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel = androi
     }
 
     Scaffold(
-        content = {paddingValues ->
-            Box(modifier = Modifier.background(darkBlue).padding(paddingValues)) {
+        content = { paddingValues ->
+            Box(
+                modifier = Modifier
+                    .background(darkBlue)
+                    .padding(paddingValues)
+            ) {
                 Column(
                     verticalArrangement = Arrangement.Center,
+
                     modifier = Modifier
                         .fillMaxSize()
                         .background(darkBlue)
@@ -67,20 +98,31 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel = androi
                     CustomInput(
                         iconDescription = "Email icon",
                         icon = Icons.Rounded.Email,
-                        hint = "Email",
+                        placeholder = "Email",
                         changeString = emailState,
-                        keyboard = KeyboardType.Email
+                        keyboard = KeyboardType.Email,
+                        hasError = uiState.error.isNotEmpty()
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     CustomInput(
                         iconDescription = "Password icon",
                         icon = Icons.Rounded.Lock,
-                        hint = "Senha",
+                        placeholder = "********",
                         changeString = passwordState,
-                        keyboard = KeyboardType.Password
+                        keyboard = KeyboardType.Password,
+                        password = true,
+                        hasError = uiState.error.isNotEmpty()
                     )
+                    if (uiState.error.isNotEmpty()) {
+                        Text(
+                            text = uiState.error,
+                            color = red,
+                            fontSize = 16.sp,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
                     Spacer(modifier = Modifier.height(24.dp))
-                    PrimaryButton(text = "Entrar", click = {viewModel.login()})
+                    PrimaryButton(text = "Entrar", click = { callLogin() })
                     Spacer(modifier = Modifier.height(16.dp))
                     ButtonDivider()
                     Spacer(modifier = Modifier.height(16.dp))

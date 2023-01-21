@@ -1,11 +1,10 @@
 package com.example.enemcompose.view.model
 
-import android.util.Log
+import android.content.Context
 import androidx.lifecycle.ViewModel
-import com.example.enemcompose.Constants
-import com.example.enemcompose.models.QuestionModel
 import com.example.enemcompose.question.AuthApi
-import com.example.enemcompose.question.QuestionApi
+import com.example.enemcompose.utils.Constants
+import com.example.enemcompose.utils.TokenManager
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -17,43 +16,116 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
-import org.json.JSONArray
 import org.json.JSONObject
 import retrofit2.Retrofit
 
-data class LoginModel (
-    val token: String = ""
+data class LoginModel(
+    val token: String = "",
+    val error: String = "",
+    val isLoading: Boolean = false
 )
 
-class LoginViewModel  : ViewModel() {
+data class TokenModel(
+    val token: String
+)
+
+class LoginViewModel(context: Context) : ViewModel() {
+    private val tokenManager: TokenManager = TokenManager(context)
+
     private val _uiState = MutableStateFlow(LoginModel())
     val uiState: StateFlow<LoginModel> = _uiState.asStateFlow()
+    private val retrofit: Retrofit = Retrofit.Builder()
+        .baseUrl(Constants.BASE_URL)
+        .build()
+    private val service = retrofit.create(AuthApi::class.java)
 
-    fun login() {
-        val retrofit = Retrofit.Builder()
-            .baseUrl(Constants.baseUrl)
-            .build()
-
-        val service = retrofit.create(AuthApi::class.java)
+    fun login(email: String, password: String) {
+        if (email.isEmpty() || password.isEmpty()) {
+            _uiState.update { currentState ->
+                currentState.copy(
+                    error = "Preencha todos os campos."
+                )
+            }
+            return
+        }
 
         val jsonObject = JSONObject()
-        jsonObject.put("email", "thehautd@gmail.com")
-        jsonObject.put("password", "123456")
+            .put("email", email)
+            .put("password", password)
 
         val jsonObjectString = jsonObject.toString()
         val requestBody = jsonObjectString.toRequestBody("application/json".toMediaTypeOrNull())
 
         CoroutineScope(Dispatchers.IO).launch {
             val response = service.login(requestBody)
-            withContext(Dispatchers.Main) {
+            withContext(Dispatchers.IO) {
                 if (response.isSuccessful) {
-//                    val gson = Gson()
-//                    val question =
-//                        gson.fromJson(response.body()?.string(), QuestionModel::class.java)
-                    println(response.body()?.string())
+                    val gson = Gson()
+                    val token =
+                        gson.fromJson(response.body()?.string(), TokenModel::class.java)
 
+                    tokenManager.saveToken(token.token)
+
+                } else if (response.code() < 500) {
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            error = "Email ou senha incorretos."
+                        )
+                    }
                 } else {
-                    Log.e("RETROFIT_ERROR", response.code().toString())
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            error = "Ocorreu um erro interno."
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun register(name: String, email: String, password: String, confirmPassword: String) {
+        if (email.isEmpty() || password.isEmpty() || name.isEmpty() || confirmPassword.isEmpty()) {
+            _uiState.update { currentState ->
+                currentState.copy(
+                    error = "Preencha todos os campos."
+                )
+            }
+            return
+        }
+
+        if (password != confirmPassword) {
+            _uiState.update { currentState ->
+                currentState.copy(
+                    error = "Senhas devem ser iguais."
+                )
+            }
+            return
+        }
+
+        val jsonObject = JSONObject()
+            .put("email", email)
+            .put("name", name)
+            .put("password", password)
+            .put("confirmPassword", confirmPassword)
+
+        val jsonObjectString = jsonObject.toString()
+        val requestBody = jsonObjectString.toRequestBody("application/json".toMediaTypeOrNull())
+
+        CoroutineScope(Dispatchers.IO).launch {
+            val response = service.createUser(requestBody)
+            withContext(Dispatchers.Main) {
+                if (response.code() < 500) {
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            error = "Dados inválidos."
+                        )
+                    }
+                } else {
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            error = "Ocorreu um erro interno."
+                        )
+                    }
                 }
             }
         }

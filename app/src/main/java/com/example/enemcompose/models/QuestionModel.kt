@@ -10,5 +10,4 @@ data class QuestionModel (
     val ask: String? = null,
     val answers: Answer? = null,
     val rightAnswer: String? = null
-
 )

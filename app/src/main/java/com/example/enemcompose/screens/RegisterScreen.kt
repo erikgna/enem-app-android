@@ -7,25 +7,35 @@ import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.enemcompose.*
 import com.example.enemcompose.components.CustomInput
 import com.example.enemcompose.components.PrimaryButton
 import com.example.enemcompose.components.SecondaryButton
+import com.example.enemcompose.factories.LoginViewModelFactory
 import com.example.enemcompose.ui.theme.darkBlue
+import com.example.enemcompose.ui.theme.red
 import com.example.enemcompose.ui.theme.white
+import com.example.enemcompose.view.model.LoginViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegisterScreen(navController: NavController) {
+fun RegisterScreen(
+    navController: NavController
+) {
+    val loginViewModel: LoginViewModel =
+        viewModel(factory = LoginViewModelFactory(LocalContext.current))
+
+    val uiState by loginViewModel.uiState.collectAsState()
+
     val emailState = remember { mutableStateOf("") }
     val nameState = remember { mutableStateOf("") }
     val passwordState = remember { mutableStateOf("") }
@@ -39,9 +49,33 @@ fun RegisterScreen(navController: NavController) {
         }
     }
 
+    fun callRegister() {
+        loginViewModel.register(
+            name = nameState.value,
+            email = emailState.value,
+            password = passwordState.value,
+            confirmPassword = confirmPasswordState.value
+        )
+
+        emailState.value = ""
+        nameState.value = ""
+        passwordState.value = ""
+        confirmPasswordState.value = ""
+
+        navController.navigate(Screen.LoginScreen.route) {
+            popUpTo(Screen.LoginScreen.route) {
+                inclusive = true
+            }
+        }
+    }
+
     Scaffold(
-        content = {paddingValue ->
-            Box(modifier = Modifier.background(darkBlue).padding(paddingValue)) {
+        content = { paddingValue ->
+            Box(
+                modifier = Modifier
+                    .background(darkBlue)
+                    .padding(paddingValue)
+            ) {
                 Column(
                     verticalArrangement = Arrangement.Center,
                     modifier = Modifier
@@ -67,35 +101,49 @@ fun RegisterScreen(navController: NavController) {
                     CustomInput(
                         iconDescription = "Name Icon",
                         icon = Icons.Rounded.Person,
-                        hint = "Nome Completo",
-                        changeString = nameState
+                        placeholder = "Nome Completo",
+                        changeString = nameState,
+                        hasError = uiState.error.isNotEmpty()
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     CustomInput(
                         iconDescription = "Email icon",
                         icon = Icons.Rounded.Email,
-                        hint = "Email",
+                        placeholder = "Email",
                         changeString = emailState,
-                        keyboard = KeyboardType.Email
+                        keyboard = KeyboardType.Email,
+                        hasError = uiState.error.isNotEmpty()
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     CustomInput(
                         iconDescription = "Password icon",
                         icon = Icons.Rounded.Lock,
-                        hint = "Senha",
+                        placeholder = "Senha",
                         changeString = passwordState,
-                        keyboard = KeyboardType.Password
+                        keyboard = KeyboardType.Password,
+                        password = true,
+                        hasError = uiState.error.isNotEmpty()
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     CustomInput(
                         iconDescription = "Confirm password icon",
                         icon = Icons.Rounded.Lock,
-                        hint = "Confirmar Senha",
+                        placeholder = "Confirmar Senha",
                         changeString = confirmPasswordState,
-                        keyboard = KeyboardType.Password
+                        keyboard = KeyboardType.Password,
+                        password = true,
+                        hasError = uiState.error.isNotEmpty()
                     )
+                    if (uiState.error.isNotEmpty()) {
+                        Text(
+                            text = uiState.error,
+                            color = red,
+                            fontSize = 16.sp,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
                     Spacer(modifier = Modifier.height(24.dp))
-                    PrimaryButton(text = "Registrar", click = {})
+                    PrimaryButton(text = "Registrar", click = { callRegister()                    })
                     Spacer(modifier = Modifier.height(16.dp))
                     ButtonDivider()
                     Spacer(modifier = Modifier.height(16.dp))

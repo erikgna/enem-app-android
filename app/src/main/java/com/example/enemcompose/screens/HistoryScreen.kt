@@ -1,28 +1,46 @@
 package com.example.enemcompose.screens
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.AlertDialog
+import androidx.compose.material.SnackbarDuration
+import androidx.compose.material.rememberScaffoldState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.enemcompose.components.MyAlertDialog
 import com.example.enemcompose.components.MyBottomNavigation
 import com.example.enemcompose.components.PrimaryButton
+import com.example.enemcompose.factories.LoginViewModelFactory
+import com.example.enemcompose.factories.QuestionViewModelFactory
 import com.example.enemcompose.ui.theme.*
+import com.example.enemcompose.view.model.LoginViewModel
+import com.example.enemcompose.view.model.QuestionViewModel
+import kotlinx.coroutines.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(navController: NavController) {
+    val questionViewModel: QuestionViewModel =
+        viewModel(factory = QuestionViewModelFactory(LocalContext.current))
+
+    val feedback by questionViewModel.feedback.collectAsState()
+
     Scaffold(
         bottomBar = {
             Column() {
@@ -34,80 +52,85 @@ fun HistoryScreen(navController: NavController) {
                 )
                 MyBottomNavigation(navController = navController)
             }
-        },
-        content = { paddingValues ->
-            Box(
+        }
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .background(darkBlue)
+                .padding(paddingValues)
+        ) {
+            Column(
                 modifier = Modifier
+                    .fillMaxSize()
                     .background(darkBlue)
-                    .padding(paddingValues)
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState())
             ) {
-                Column(
+                Text(
+                    text = "Pontuação",
+                    color = white,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Score(
+                    text = "Ciencias Humanas e suas Tecnologias",
+                    percentage = .2f,
                     modifier = Modifier
-                        .fillMaxSize()
-                        .background(darkBlue)
-                        .padding(16.dp)
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    Text(
-                        text = "Pontuação",
-                        color = white,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Score(
-                        text = "Ciencias Humanas e suas Tecnologias",
-                        percentage = .2f,
-                        modifier = Modifier
-                            .size(size = 80.dp)
-                            .align(Alignment.CenterHorizontally)
-                    )
-                    Score(
-                        text = "Ciencias Humanas e suas Tecnologias",
-                        percentage = 1f,
-                        modifier = Modifier
-                            .size(size = 80.dp)
-                            .align(Alignment.CenterHorizontally)
-                    )
-                    Score(
-                        text = "Ciencias Humanas e suas Tecnologias",
-                        percentage = 1f,
-                        modifier = Modifier
-                            .size(size = 80.dp)
-                            .align(Alignment.CenterHorizontally)
-                    )
-                    Score(
-                        text = "Ciencias Humanas e suas Tecnologias",
-                        percentage = .2f,
-                        modifier = Modifier
-                            .size(size = 80.dp)
-                            .align(Alignment.CenterHorizontally)
-                    )
-                    Text(
-                        text = "Questoes respondidas",
-                        color = white,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
-                    HistoryItem(
-                        myColor = green,
-                        text = "Questao 89 - Ciencias Humanas e suas Tecnologias - 2011 "
-                    )
-                    HistoryItem(
-                        myColor = red,
-                        text = "Questao 89 - Ciencias Humanas e suas Tecnologias - 2011 "
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    PrimaryButton(text = "Deletar histórico", click = {})
-                    Spacer(
-                        modifier = Modifier
-                            .height(96.dp)
-                    )
+                        .size(size = 80.dp)
+                        .align(Alignment.CenterHorizontally)
+                )
+                Score(
+                    text = "Ciencias Humanas e suas Tecnologias",
+                    percentage = 1f,
+                    modifier = Modifier
+                        .size(size = 80.dp)
+                        .align(Alignment.CenterHorizontally)
+                )
+                Score(
+                    text = "Ciencias Humanas e suas Tecnologias",
+                    percentage = 1f,
+                    modifier = Modifier
+                        .size(size = 80.dp)
+                        .align(Alignment.CenterHorizontally)
+                )
+                Score(
+                    text = "Ciencias Humanas e suas Tecnologias",
+                    percentage = .2f,
+                    modifier = Modifier
+                        .size(size = 80.dp)
+                        .align(Alignment.CenterHorizontally)
+                )
+                Text(
+                    text = "Questoes respondidas",
+                    color = white,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                HistoryItem(
+                    myColor = green,
+                    text = "Questao 89 - Ciencias Humanas e suas Tecnologias - 2011 "
+                )
+                if (feedback.isNotEmpty()) {
+                    MyAlertDialog(feedback) { questionViewModel.resetFeedback() }
                 }
+                HistoryItem(
+                    myColor = red,
+                    text = "Questao 89 - Ciencias Humanas e suas Tecnologias - 2011 "
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+                PrimaryButton(text = "Deletar histórico", click = {
+                        questionViewModel.eraseHistory()
+                })
+                Spacer(
+                    modifier = Modifier
+                        .height(96.dp)
+                )
             }
         }
-    )
+    }
 }
 
 @Composable
@@ -132,7 +155,7 @@ fun HistoryItem(myColor: Color, text: String) {
 @Composable
 fun Score(percentage: Float, modifier: Modifier, text: String) {
     Column(
-        modifier= Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

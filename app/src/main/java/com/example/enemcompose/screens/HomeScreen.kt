@@ -12,25 +12,52 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.enemcompose.*
 import com.example.enemcompose.components.MyBottomNavigation
 import com.example.enemcompose.components.PrimaryButton
 import com.example.enemcompose.components.SecondaryButton
+import com.example.enemcompose.factories.QuestionViewModelFactory
 import com.example.enemcompose.ui.theme.darkBlue
 import com.example.enemcompose.ui.theme.primaryBlue
 import com.example.enemcompose.ui.theme.secondaryBlue
 import com.example.enemcompose.ui.theme.white
+import com.example.enemcompose.view.model.QuestionViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController) {
-    fun navigateToQuestion(){
-        navController.navigate(Screen.QuestionScreen.route)
+    val areas = remember { mutableStateListOf<String>() }
+    val years = remember { mutableStateListOf<String>() }
+
+    fun editArea(area: String) {
+        if (areas.contains(area)) {
+            areas.remove(area)
+        } else {
+            areas.add(area)
+        }
+    }
+
+    fun editYear(year: String) {
+        if (years.contains(year)) {
+            years.remove(year)
+        } else {
+            years.add(year)
+        }
+    }
+
+    fun navigateToQuestion() {
+        navController.navigate("${Screen.QuestionScreen.route}/${areas}/${years}")
+    }
+
+    fun navigateToRandomQuestion() {
+        navController.navigate("${Screen.QuestionScreen.route}/[]/[]")
     }
 
     Scaffold(
@@ -45,8 +72,12 @@ fun HomeScreen(navController: NavController) {
                 MyBottomNavigation(navController = navController)
             }
         },
-        content = {paddingValues ->
-            Box(modifier = Modifier.background(darkBlue).padding(paddingValues)) {
+        content = { paddingValues ->
+            Box(
+                modifier = Modifier
+                    .background(darkBlue)
+                    .padding(paddingValues)
+            ) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -67,22 +98,26 @@ fun HomeScreen(navController: NavController) {
                     Spacer(modifier = Modifier.height(24.dp))
                     CheckArea(
                         text = "Ciências Humanas\ne suas Tecnologias",
-                        icon = Icons.Rounded.Add
+                        icon = Icons.Rounded.Add,
+                        click = { editArea("humanas") }
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     CheckArea(
                         text = "Matemática e suas\n Tecnologias",
-                        icon = Icons.Rounded.Add
+                        icon = Icons.Rounded.Add,
+                        click = { editArea("matematica") }
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     CheckArea(
                         text = "Ciências da Natureza\n e suas Tecnologias",
-                        icon = Icons.Rounded.Add
+                        icon = Icons.Rounded.Add,
+                        click = { editArea("natureza") }
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     CheckArea(
                         text = "Linguagens, Códigos\ne suas Tecnologias",
-                        icon = Icons.Rounded.Add
+                        icon = Icons.Rounded.Add,
+                        click = { editArea("linguagens") }
                     )
                     Spacer(modifier = Modifier.height(48.dp))
                     Text(
@@ -96,26 +131,28 @@ fun HomeScreen(navController: NavController) {
                     Spacer(modifier = Modifier.height(24.dp))
                     Row() {
                         Column() {
-                            CheckYear(text = "2011")
-                            CheckYear(text = "2013")
-                            CheckYear(text = "2015")
-                            CheckYear(text = "2017")
-                            CheckYear(text = "2019")
-                            CheckYear(text = "2022")
+                            CheckYear(text = "2011", click = { editYear("2011") })
+                            CheckYear(text = "2013", click = { editYear("2013") })
+                            CheckYear(text = "2015", click = { editYear("2015") })
+                            CheckYear(text = "2017", click = { editYear("2017") })
+                            CheckYear(text = "2019", click = { editYear("2019") })
+                            CheckYear(text = "2022", click = { editYear("2022") })
                         }
                         Spacer(modifier = Modifier.width(32.dp))
                         Column() {
-                            CheckYear(text = "2012")
-                            CheckYear(text = "2014")
-                            CheckYear(text = "2016")
-                            CheckYear(text = "2018")
-                            CheckYear(text = "2020")
+                            CheckYear(text = "2012", click = { editYear("2012") })
+                            CheckYear(text = "2014", click = { editYear("2014") })
+                            CheckYear(text = "2016", click = { editYear("2016") })
+                            CheckYear(text = "2018", click = { editYear("2018") })
+                            CheckYear(text = "2020", click = { editYear("2020") })
                         }
                     }
                     Spacer(modifier = Modifier.height(24.dp))
                     PrimaryButton(text = "Gerar Perguntas", click = { navigateToQuestion() })
                     Spacer(modifier = Modifier.height(8.dp))
-                    SecondaryButton(text = "Gerar Perguntas Aleatoriamente", click = {})
+                    SecondaryButton(
+                        text = "Gerar Perguntas Aleatoriamente",
+                        click = { navigateToRandomQuestion() })
                     Spacer(
                         modifier = Modifier
                             .height(96.dp)
@@ -127,13 +164,16 @@ fun HomeScreen(navController: NavController) {
 }
 
 @Composable
-fun CheckYear(text: String) {
+fun CheckYear(text: String, click: () -> Unit) {
     var isClicked by remember { mutableStateOf(false) }
 
     Row(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.clickable { isClicked = !isClicked }
+        modifier = Modifier.clickable {
+            isClicked = !isClicked
+            click()
+        }
     ) {
         Checkbox(
             checked = isClicked,
@@ -149,7 +189,7 @@ fun CheckYear(text: String) {
 }
 
 @Composable
-fun CheckArea(text: String, icon: ImageVector) {
+fun CheckArea(text: String, icon: ImageVector, click: () -> Unit) {
     var isClicked by remember { mutableStateOf(true) }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -161,7 +201,10 @@ fun CheckArea(text: String, icon: ImageVector) {
                 )
                 .fillMaxWidth()
                 .padding(vertical = 24.dp)
-                .clickable { isClicked = false }
+                .clickable {
+                    isClicked = false
+                    click()
+                }
         } else {
             Modifier
                 .fillMaxWidth()
@@ -175,7 +218,10 @@ fun CheckArea(text: String, icon: ImageVector) {
                     )
                 )
                 .padding(vertical = 24.dp)
-                .clickable { isClicked = true }
+                .clickable {
+                    isClicked = true
+                    click()
+                }
         }
     ) {
         Icon(

@@ -1,13 +1,19 @@
 package com.example.enemcompose.models
 
-data class Answer(val a: String, val b: String, val c: String, val d: String, val e: String)
-
 data class QuestionModel (
-    val id: String? = null,
-    val url: String? = null,
-    val name: String? = null,
-    val description: String? = null,
-    val ask: String? = null,
-    val answers: Answer? = null,
-    val rightAnswer: String? = null
+    val id: String = "",
+    val url: String = "",
+    val name: String = "",
+    val description: String = "",
+    val ask: String = "",
+    val answers: Answers = Answers(a = "", b="", c="", d="", e=""),
+    val rightAnswer: String = ""
+)
+
+data class Answers (
+    val a: String,
+    val b: String,
+    val c: String,
+    val d: String,
+    val e: String
 )

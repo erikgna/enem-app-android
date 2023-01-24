@@ -2,15 +2,12 @@ package com.example.enemcompose.view.model
 
 import android.content.Context
 import android.util.Log
-import android.widget.Toast
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.enemcompose.models.Answer
 import com.example.enemcompose.models.QuestionModel
 import com.example.enemcompose.question.QuestionApi
 import com.example.enemcompose.utils.Constants
+import com.example.enemcompose.utils.Interceptor
 import com.example.enemcompose.utils.TokenManager
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
@@ -27,17 +24,18 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
 import retrofit2.Retrofit
-import com.example.enemcompose.utils.Interceptor
 
-class QuestionViewModel(private val context: Context) : ViewModel() {
+class QuestionViewModel(private val context: Context, private val random: Boolean) : ViewModel() {
+    private val tokenManager: TokenManager = TokenManager(context)
+
     private val _uiState = MutableStateFlow(QuestionModel())
     val uiState: StateFlow<QuestionModel> = _uiState.asStateFlow()
 
-    private val _feedback = MutableStateFlow(String())
-    val feedback: StateFlow<String> = _feedback.asStateFlow()
+    private val _loading = MutableStateFlow(false)
+    val loading: StateFlow<Boolean> = _loading.asStateFlow()
 
-//    private val _feedback = MutableStateFlow(String())
-//    val feedback: StateFlow<String> = _feedback.asStateFlow()
+    private val _error = MutableStateFlow(String())
+    val error: StateFlow<String> = _error.asStateFlow()
 
     private val service = Retrofit.Builder()
         .baseUrl(Constants.BASE_URL).client(OkHttpClient.Builder().apply {
@@ -47,37 +45,41 @@ class QuestionViewModel(private val context: Context) : ViewModel() {
     init {
         viewModelScope.launch {
             getQuestion()
-            getUserQuestions()
         }
     }
 
-    fun getOneQuestion() {
-        CoroutineScope(Dispatchers.IO).launch {
-            val response = service.getQuestionById("")
+    fun getQuestion() {
+        val areas: String = tokenManager.getAreas()!!
+        val years: String = tokenManager.getYears()!!
 
-            withContext(Dispatchers.Main) {
-                if (response.isSuccessful) {
-//                    val gson = Gson()
-//                    val question =
-//                        gson.fromJson(response.body()?.string(), QuestionModel::class.java)
+        val areasList = areas.replace("\"", "").replace("[", "").replace("]", "").split(",")
+        val yearsList = years.replace("\"", "").replace("[", "").replace("]", "").split(",")
 
-                    println(response.body()?.string())
-                } else {
-                    Log.e("RETROFIT_ERROR", response.code().toString())
-                }
-            }
+        val jsonObject = JSONObject()
+        if (random) {
+            jsonObject.put("areas", JSONArray(ArrayList<String>()))
+            jsonObject.put("years", JSONArray(ArrayList<String>()))
+        } else {
+            jsonObject.put(
+                "areas", JSONArray(areasList)
+            )
+            jsonObject.put(
+                "years", JSONArray(yearsList)
+            )
         }
-    }
 
-    fun getUserQuestions() {
+        val jsonObjectString = jsonObject.toString()
+        val requestBody = jsonObjectString.toRequestBody("application/json".toMediaTypeOrNull())
+
+        _loading.value = true
         CoroutineScope(Dispatchers.IO).launch {
-            val response = service.getUserQuestions()
-
+            val response = service.getQuestion(requestBody)
             withContext(Dispatchers.Main) {
                 if (response.isSuccessful) {
+                    val stringResponse = response.body()?.string()
                     val gson = Gson()
                     val question =
-                        gson.fromJson(response.body()?.string(), QuestionModel::class.java)
+                        gson.fromJson(stringResponse, QuestionModel::class.java)
 
                     _uiState.update { currentState ->
                         currentState.copy(
@@ -91,56 +93,11 @@ class QuestionViewModel(private val context: Context) : ViewModel() {
                         )
                     }
                 } else {
-                    Log.e("RETROFIT_ERROR", response.code().toString())
+                    _error.value = "Ocorreu um erro, por favor, tente novamente."
                 }
             }
+            _loading.value = false
         }
-    }
-
-    fun getQuestion() {
-        _uiState.update { currentState ->
-            currentState.copy(
-                answers = Answer("a", "b", "c", "d", "e"),
-                ask = "question.ask",
-                rightAnswer = "a",
-                id = "question.id",
-                url = "question.url",
-                name = "question.name",
-                description = "question.description"
-            )
-        }
-
-//        val jsonObject = JSONObject()
-//        jsonObject.put("areas", JSONArray(ArrayList<String>()))
-//        jsonObject.put("years", JSONArray(ArrayList<String>()))
-//
-//        val jsonObjectString = jsonObject.toString()
-//        val requestBody = jsonObjectString.toRequestBody("application/json".toMediaTypeOrNull())
-//
-//        CoroutineScope(Dispatchers.IO).launch {
-//            val response = service.getQuestion(requestBody)
-//            withContext(Dispatchers.Main) {
-//                if (response.isSuccessful) {
-//                    val gson = Gson()
-//                    val question =
-//                        gson.fromJson(response.body()?.string(), QuestionModel::class.java)
-//
-//                    _uiState.update { currentState ->
-//                        currentState.copy(
-//                            answers = question.answers,
-//                            ask = question.ask,
-//                            rightAnswer = question.rightAnswer,
-//                            id = question.id,
-//                            url = question.url,
-//                            name = question.name,
-//                            description = question.description
-//                        )
-//                    }
-//                } else {
-//                    Log.e("RETROFIT_ERROR", response.code().toString())
-//                }
-//            }
-//        }
     }
 
     fun addQuestion(correct: Boolean) {
@@ -151,32 +108,15 @@ class QuestionViewModel(private val context: Context) : ViewModel() {
         val jsonObjectString = jsonObject.toString()
         val requestBody = jsonObjectString.toRequestBody("application/json".toMediaTypeOrNull())
 
+        _loading.value = true
         CoroutineScope(Dispatchers.IO).launch {
             val response = service.addNewQuestion(requestBody)
             withContext(Dispatchers.Main) {
-                if (response.isSuccessful) {
-                    println("deu certo!")
-                } else {
-                    Log.e("RETROFIT_ERROR", response.code().toString())
+                if (!response.isSuccessful) {
+                    _error.value = "Ocorreu um erro, por favor, tente novamente."
                 }
             }
         }
-    }
-
-    fun eraseHistory() {
-        CoroutineScope(Dispatchers.IO).launch {
-            val response = service.eraseHistory()
-            withContext(Dispatchers.Main) {
-                if (response.isSuccessful) {
-                    _feedback.value = "Histórico deletado com sucesso."
-                } else {
-                    _feedback.value = "Ocorreu um erro ao apagar o histórico."
-                }
-            }
-        }
-    }
-
-    fun resetFeedback() {
-        _feedback.value = ""
+        _loading.value = false
     }
 }

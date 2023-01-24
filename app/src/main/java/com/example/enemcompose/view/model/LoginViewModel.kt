@@ -34,6 +34,10 @@ class LoginViewModel(context: Context) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginModel())
     val uiState: StateFlow<LoginModel> = _uiState.asStateFlow()
+
+    private val _loading = MutableStateFlow(false)
+    val loading: StateFlow<Boolean> = _loading.asStateFlow()
+
     private val retrofit: Retrofit = Retrofit.Builder()
         .baseUrl(Constants.BASE_URL)
         .build()
@@ -56,6 +60,7 @@ class LoginViewModel(context: Context) : ViewModel() {
         val jsonObjectString = jsonObject.toString()
         val requestBody = jsonObjectString.toRequestBody("application/json".toMediaTypeOrNull())
 
+        _loading.value = true
         CoroutineScope(Dispatchers.IO).launch {
             val response = service.login(requestBody)
             withContext(Dispatchers.IO) {
@@ -81,6 +86,7 @@ class LoginViewModel(context: Context) : ViewModel() {
                 }
             }
         }
+        _loading.value = true
     }
 
     fun register(name: String, email: String, password: String, confirmPassword: String) {
@@ -111,6 +117,7 @@ class LoginViewModel(context: Context) : ViewModel() {
         val jsonObjectString = jsonObject.toString()
         val requestBody = jsonObjectString.toRequestBody("application/json".toMediaTypeOrNull())
 
+        _loading.value = true
         CoroutineScope(Dispatchers.IO).launch {
             val response = service.createUser(requestBody)
             withContext(Dispatchers.Main) {
@@ -129,5 +136,6 @@ class LoginViewModel(context: Context) : ViewModel() {
                 }
             }
         }
+        _loading.value = true
     }
 }

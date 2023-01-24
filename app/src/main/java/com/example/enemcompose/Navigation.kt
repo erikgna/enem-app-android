@@ -1,18 +1,26 @@
 package com.example.enemcompose
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.enemcompose.screens.*
+import com.example.enemcompose.utils.TokenManager
 
 @Composable
 fun Navigation() {
+    val tokenManager = TokenManager(LocalContext.current)
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Screen.MainScreen.route) {
+    NavHost(
+        navController = navController,
+        startDestination = if (tokenManager.getToken() == null) {
+            Screen.MainScreen.route
+        } else {
+            Screen.HomeScreen.route
+        }
+    ) {
         composable(route = Screen.MainScreen.route) {
             MainScreen(navController = navController)
         }
@@ -25,15 +33,19 @@ fun Navigation() {
         composable(route = Screen.HomeScreen.route) {
             HomeScreen(navController = navController)
         }
-        composable(route = "${Screen.QuestionScreen.route}/{areas}/{years}") {
-            val areas = it.arguments?.getString("areas")
-            val years = it.arguments?.getString("years")
-            println(areas)
-            println(years)
-            QuestionScreen(navController = navController)
+        composable(route = "${Screen.QuestionScreen.route}/{random}") {
+            val random: String? = it.arguments?.getString("random")
+
+            QuestionScreen(
+                navController = navController, random?.contains("true") ?: true
+            )
         }
         composable(route = Screen.HistoryScreen.route) {
             HistoryScreen(navController = navController)
+        }
+        composable(route = "${Screen.QuestionInfoScreen.route}/{id}") {
+            val id: String = it.arguments?.getString("id") ?: ""
+            QuestionInfoScreen(navController = navController, id = id)
         }
     }
 }

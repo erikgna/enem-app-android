@@ -1,9 +1,9 @@
 package com.example.enemcompose.screens
 
-import android.annotation.SuppressLint
-import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Lock
@@ -20,15 +20,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.enemcompose.*
 import com.example.enemcompose.components.CustomInput
+import com.example.enemcompose.components.Loading
 import com.example.enemcompose.components.PrimaryButton
 import com.example.enemcompose.components.SecondaryButton
 import com.example.enemcompose.factories.LoginViewModelFactory
 import com.example.enemcompose.ui.theme.darkBlue
 import com.example.enemcompose.ui.theme.red
 import com.example.enemcompose.ui.theme.white
-import com.example.enemcompose.utils.Constants
 import com.example.enemcompose.view.model.LoginViewModel
-import com.example.enemcompose.view.model.QuestionViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,6 +39,7 @@ fun LoginScreen(
     val uiState by loginViewModel.uiState.collectAsState()
     val emailState = remember { mutableStateOf("") }
     val passwordState = remember { mutableStateOf("") }
+    val loading by loginViewModel.loading.collectAsState()
 
     fun callLogin() {
         loginViewModel.login(
@@ -72,13 +72,24 @@ fun LoginScreen(
                     .background(darkBlue)
                     .padding(paddingValues)
             ) {
-                Column(
-                    verticalArrangement = Arrangement.Center,
-
+                if (loading) {
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(darkBlue)
+                            .padding(16.dp)
+                            .verticalScroll(rememberScrollState())
+                    ) {
+                        Loading()
+                    }
+                } else Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(darkBlue)
                         .padding(16.dp)
+                        .verticalScroll(rememberScrollState())
                 ) {
                     Logo()
                     Spacer(modifier = Modifier.height(64.dp))

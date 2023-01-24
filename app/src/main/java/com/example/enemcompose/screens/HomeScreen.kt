@@ -23,16 +23,19 @@ import com.example.enemcompose.*
 import com.example.enemcompose.components.MyBottomNavigation
 import com.example.enemcompose.components.PrimaryButton
 import com.example.enemcompose.components.SecondaryButton
-import com.example.enemcompose.factories.QuestionViewModelFactory
+import com.example.enemcompose.factories.HomeViewModelFactory
 import com.example.enemcompose.ui.theme.darkBlue
 import com.example.enemcompose.ui.theme.primaryBlue
 import com.example.enemcompose.ui.theme.secondaryBlue
 import com.example.enemcompose.ui.theme.white
-import com.example.enemcompose.view.model.QuestionViewModel
+import com.example.enemcompose.view.model.HomeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController) {
+    val homeViewModel: HomeViewModel =
+        viewModel(factory = HomeViewModelFactory(LocalContext.current))
+
     val areas = remember { mutableStateListOf<String>() }
     val years = remember { mutableStateListOf<String>() }
 
@@ -45,6 +48,7 @@ fun HomeScreen(navController: NavController) {
     }
 
     fun editYear(year: String) {
+        println(year)
         if (years.contains(year)) {
             years.remove(year)
         } else {
@@ -53,11 +57,14 @@ fun HomeScreen(navController: NavController) {
     }
 
     fun navigateToQuestion() {
-        navController.navigate("${Screen.QuestionScreen.route}/${areas}/${years}")
+        homeViewModel.saveAreas(areas)
+        homeViewModel.saveYears(years)
+
+        navController.navigate("${Screen.QuestionScreen.route}/false")
     }
 
     fun navigateToRandomQuestion() {
-        navController.navigate("${Screen.QuestionScreen.route}/[]/[]")
+        navController.navigate("${Screen.QuestionScreen.route}/true")
     }
 
     Scaffold(
@@ -111,7 +118,7 @@ fun HomeScreen(navController: NavController) {
                     CheckArea(
                         text = "Ciências da Natureza\n e suas Tecnologias",
                         icon = Icons.Rounded.Add,
-                        click = { editArea("natureza") }
+                        click = { editArea("naturais") }
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     CheckArea(
@@ -177,7 +184,10 @@ fun CheckYear(text: String, click: () -> Unit) {
     ) {
         Checkbox(
             checked = isClicked,
-            onCheckedChange = { isClicked = !isClicked },
+            onCheckedChange = {
+                isClicked = !isClicked
+                click()
+            },
             colors = CheckboxDefaults.colors(
                 checkmarkColor = white,
                 uncheckedColor = white,

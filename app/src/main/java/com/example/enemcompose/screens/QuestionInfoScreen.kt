@@ -1,12 +1,16 @@
 package com.example.enemcompose.screens
 
-import androidx.compose.foundation.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,48 +24,23 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.enemcompose.Logo
-import com.example.enemcompose.components.*
-import com.example.enemcompose.factories.QuestionViewModelFactory
-import com.example.enemcompose.ui.theme.*
+import com.example.enemcompose.components.Loading
+import com.example.enemcompose.components.MyBottomNavigation
+import com.example.enemcompose.factories.QuestionInfoViewModelFactory
+import com.example.enemcompose.ui.theme.darkBlue
+import com.example.enemcompose.ui.theme.white
 import com.example.enemcompose.utils.StringHandler
-import com.example.enemcompose.view.model.QuestionViewModel
-
-const val http = "http"
-const val a = "a"
-const val b = "b"
-const val c = "c"
-const val d = "d"
-const val e = "e"
+import com.example.enemcompose.view.model.QuestionInfoViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun QuestionScreen(navController: NavController, random: Boolean) {
-    val questionViewModel: QuestionViewModel =
-        viewModel(factory = QuestionViewModelFactory(LocalContext.current, random))
+fun QuestionInfoScreen(navController: NavController, id: String) {
+    val questionInfoViewModel: QuestionInfoViewModel =
+        viewModel(factory = QuestionInfoViewModelFactory(id))
 
-    val uiState by questionViewModel.uiState.collectAsState()
-
-    val error by questionViewModel.error.collectAsState()
-    val choosen = remember { mutableStateOf("") }
-    val feedback = remember { mutableStateOf(error) }
-    val isAnswer = remember { mutableStateOf(true) }
-    val loading by questionViewModel.loading.collectAsState()
-
-    fun checkAnswer() {
-        if(choosen.value == ""){
-            feedback.value = "Por favor, selecione uma resposta."
-            return
-        }
-
-        isAnswer.value = false
-        questionViewModel.addQuestion(choosen.value == uiState.rightAnswer)
-    }
-
-    fun nextQuestion() {
-        choosen.value = ""
-        isAnswer.value = true
-        questionViewModel.getQuestion()
-    }
+    val feedback by questionInfoViewModel.feedback.collectAsState()
+    val uiState by questionInfoViewModel.uiState.collectAsState()
+    val loading by questionInfoViewModel.loading.collectAsState()
 
     Scaffold(
         bottomBar = {
@@ -81,7 +60,7 @@ fun QuestionScreen(navController: NavController, random: Boolean) {
                 .background(darkBlue)
                 .padding(paddingValues)
         ) {
-            if (loading) {
+            if (loading)
                 Column(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -93,13 +72,28 @@ fun QuestionScreen(navController: NavController, random: Boolean) {
                 ) {
                     Loading()
                 }
+            if (feedback != "") {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(darkBlue)
+                        .padding(16.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text(
+                        text = feedback,
+                        color = white,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             } else Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(darkBlue)
                     .padding(16.dp)
                     .verticalScroll(rememberScrollState())
-            )  {
+            ) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Logo()
                 Spacer(modifier = Modifier.height(40.dp))
@@ -160,122 +154,27 @@ fun QuestionScreen(navController: NavController, random: Boolean) {
                     }
                 }
                 Spacer(modifier = Modifier.height(32.dp))
-
                 AnswerItem(
                     msg = uiState.answers.a,
-                    isWrong = uiState.rightAnswer != a,
-                    isAnswer = isAnswer.value,
-                    click = { choosen.value = a },
-                    selected = choosen.value == a,
+                    isWrong = uiState.rightAnswer != a
                 )
                 AnswerItem(
                     msg = uiState.answers.b,
-                    isWrong = uiState.rightAnswer != b,
-                    isAnswer = isAnswer.value,
-                    selected = choosen.value == b,
-                    click = { choosen.value = b })
+                    isWrong = uiState.rightAnswer != b
+                )
                 AnswerItem(
                     msg = uiState.answers.c,
                     isWrong = uiState.rightAnswer != c,
-                    isAnswer = isAnswer.value,
-                    selected = choosen.value == c,
-                    click = { choosen.value = c })
+                )
                 AnswerItem(
                     msg = uiState.answers.d,
                     isWrong = uiState.rightAnswer != d,
-                    isAnswer = isAnswer.value,
-                    selected = choosen.value == d,
-                    click = { choosen.value = d })
+                )
                 AnswerItem(
                     msg = uiState.answers.e,
                     isWrong = uiState.rightAnswer != e,
-                    isAnswer = isAnswer.value,
-                    selected = choosen.value == e,
-                    click = { choosen.value = e })
-
-                Spacer(modifier = Modifier.height(16.dp))
-                PrimaryButton(text = "Ver resposta", click = { checkAnswer() })
-                Spacer(modifier = Modifier.height(8.dp))
-                SecondaryButton(text = "Próxima pergunta", click = { nextQuestion() })
-
-                if (feedback.value.isNotEmpty()) {
-                    MyAlertDialog(feedback.value) { feedback.value = "" }
-                }
+                )
             }
-        }
-    }
-}
-
-@Composable
-fun AnswerItem(
-    msg: String,
-    isWrong: Boolean,
-    isAnswer: Boolean = true,
-    click: () -> Unit = {},
-    selected: Boolean = false
-) {
-    Box(
-        contentAlignment = if (msg.contains(http)) {
-            Alignment.Center
-        } else {
-            Alignment.CenterStart
-        },
-        modifier = if (selected && isAnswer) {
-            Modifier
-                .padding(bottom = 24.dp)
-                .border(
-                    border = BorderStroke(2.dp, primaryBlue),
-                    shape = RoundedCornerShape(4.dp),
-                )
-                .fillMaxWidth()
-                .clickable { click() }
-        } else if (isAnswer) {
-            Modifier
-                .padding(bottom = 24.dp)
-                .border(
-                    border = BorderStroke(2.dp, white),
-                    shape = RoundedCornerShape(4.dp),
-                )
-                .fillMaxWidth()
-                .clickable { click() }
-        } else if (isWrong) {
-            Modifier
-                .padding(bottom = 24.dp)
-                .border(
-                    border = BorderStroke(2.dp, red),
-                    shape = RoundedCornerShape(4.dp),
-                )
-                .fillMaxWidth()
-                .clickable { click() }
-        } else {
-            Modifier
-                .padding(bottom = 24.dp)
-                .border(
-                    border = BorderStroke(2.dp, green),
-                    shape = RoundedCornerShape(4.dp),
-                )
-                .fillMaxWidth()
-                .clickable { click() }
-        }
-    ) {
-        if (msg.contains(http)) {
-            AsyncImage(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(msg.substring(10, msg.indexOf(">") - 3))
-                    .crossfade(true).build(),
-                contentScale = ContentScale.FillBounds,
-                contentDescription = "Image"
-            )
-        } else {
-            Text(
-                text = msg,
-                color = white,
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
-            )
         }
     }
 }

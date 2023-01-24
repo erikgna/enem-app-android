@@ -1,13 +1,8 @@
 package com.example.enemcompose.screens
 
-import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.AlertDialog
-import androidx.compose.material.SnackbarDuration
-import androidx.compose.material.rememberScaffoldState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
@@ -23,27 +18,30 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.enemcompose.Screen
+import com.example.enemcompose.components.Loading
 import com.example.enemcompose.components.MyAlertDialog
 import com.example.enemcompose.components.MyBottomNavigation
 import com.example.enemcompose.components.PrimaryButton
-import com.example.enemcompose.factories.LoginViewModelFactory
-import com.example.enemcompose.factories.QuestionViewModelFactory
+import com.example.enemcompose.factories.HistoryViewModelFactory
 import com.example.enemcompose.ui.theme.*
-import com.example.enemcompose.view.model.LoginViewModel
-import com.example.enemcompose.view.model.QuestionViewModel
+import com.example.enemcompose.view.model.HistoryViewModel
 import kotlinx.coroutines.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(navController: NavController) {
-    val questionViewModel: QuestionViewModel =
-        viewModel(factory = QuestionViewModelFactory(LocalContext.current))
+    val historyViewModel: HistoryViewModel =
+        viewModel(factory = HistoryViewModelFactory(LocalContext.current))
 
-    val feedback by questionViewModel.feedback.collectAsState()
+    val feedback by historyViewModel.feedback.collectAsState()
+    val loading by historyViewModel.loading.collectAsState()
+    val history by historyViewModel.history.collectAsState()
+    val percentages by historyViewModel.percentages.collectAsState()
 
     Scaffold(
         bottomBar = {
-            Column() {
+            Column {
                 Spacer(
                     modifier = Modifier
                         .background(white)
@@ -59,7 +57,19 @@ fun HistoryScreen(navController: NavController) {
                 .background(darkBlue)
                 .padding(paddingValues)
         ) {
-            Column(
+            if (loading) {
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(darkBlue)
+                        .padding(16.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Loading()
+                }
+            } else if(history.isNotEmpty()) Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(darkBlue)
@@ -75,28 +85,28 @@ fun HistoryScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(24.dp))
                 Score(
                     text = "Ciencias Humanas e suas Tecnologias",
-                    percentage = .2f,
+                    percentage = percentages.humanas.toFloat(),
                     modifier = Modifier
                         .size(size = 80.dp)
                         .align(Alignment.CenterHorizontally)
                 )
                 Score(
-                    text = "Ciencias Humanas e suas Tecnologias",
-                    percentage = 1f,
+                    text = "Linguagens e suas Tecnologias",
+                    percentage = percentages.linguagens.toFloat(),
                     modifier = Modifier
                         .size(size = 80.dp)
                         .align(Alignment.CenterHorizontally)
                 )
                 Score(
-                    text = "Ciencias Humanas e suas Tecnologias",
-                    percentage = 1f,
+                    text = "Ciencias Naturais e suas Tecnologias",
+                    percentage = percentages.natureza.toFloat(),
                     modifier = Modifier
                         .size(size = 80.dp)
                         .align(Alignment.CenterHorizontally)
                 )
                 Score(
-                    text = "Ciencias Humanas e suas Tecnologias",
-                    percentage = .2f,
+                    text = "Matemática e suas Tecnologias",
+                    percentage = percentages.matematica.toFloat(),
                     modifier = Modifier
                         .size(size = 80.dp)
                         .align(Alignment.CenterHorizontally)
@@ -108,25 +118,45 @@ fun HistoryScreen(navController: NavController) {
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(modifier = Modifier.height(24.dp))
-                HistoryItem(
-                    myColor = green,
-                    text = "Questao 89 - Ciencias Humanas e suas Tecnologias - 2011 "
-                )
-                if (feedback.isNotEmpty()) {
-                    MyAlertDialog(feedback) { questionViewModel.resetFeedback() }
+                history.map {
+                    HistoryItem(
+                        click = { navController.navigate("${Screen.QuestionInfoScreen.route}/${it.question?.url}") },
+                        myColor = if (it.correct == true) {
+                            green
+                        } else {
+                            red
+                        }, text = if (it.question?.name == null) {
+                            ""
+                        } else {
+                            it.question.name
+                        }
+                    )
                 }
-                HistoryItem(
-                    myColor = red,
-                    text = "Questao 89 - Ciencias Humanas e suas Tecnologias - 2011 "
-                )
-
+                if (feedback.isNotEmpty()) {
+                    MyAlertDialog(feedback) { historyViewModel.resetFeedback() }
+                }
                 Spacer(modifier = Modifier.height(16.dp))
                 PrimaryButton(text = "Deletar histórico", click = {
-                        questionViewModel.eraseHistory()
+                    historyViewModel.eraseHistory()
                 })
                 Spacer(
                     modifier = Modifier
                         .height(96.dp)
+                )
+            } else Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(darkBlue)
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Text(
+                    text = "Seu histórico está vazio.",
+                    color = white,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold
                 )
             }
         }
@@ -134,7 +164,7 @@ fun HistoryScreen(navController: NavController) {
 }
 
 @Composable
-fun HistoryItem(myColor: Color, text: String) {
+fun HistoryItem(myColor: Color, text: String, click: () -> Unit) {
     Box(
         modifier = Modifier
             .padding(bottom = 16.dp)
@@ -143,6 +173,7 @@ fun HistoryItem(myColor: Color, text: String) {
                 shape = RoundedCornerShape(5.dp),
             )
             .fillMaxWidth()
+            .clickable { click() }
     ) {
         Text(
             text = text,

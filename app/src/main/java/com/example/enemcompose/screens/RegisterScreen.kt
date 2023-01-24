@@ -2,12 +2,15 @@ package com.example.enemcompose.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -18,6 +21,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.enemcompose.*
 import com.example.enemcompose.components.CustomInput
+import com.example.enemcompose.components.Loading
 import com.example.enemcompose.components.PrimaryButton
 import com.example.enemcompose.components.SecondaryButton
 import com.example.enemcompose.factories.LoginViewModelFactory
@@ -40,6 +44,7 @@ fun RegisterScreen(
     val nameState = remember { mutableStateOf("") }
     val passwordState = remember { mutableStateOf("") }
     val confirmPasswordState = remember { mutableStateOf("") }
+    val loading by loginViewModel.loading.collectAsState()
 
     fun navigateToLogin() {
         navController.navigate(Screen.LoginScreen.route) {
@@ -76,12 +81,24 @@ fun RegisterScreen(
                     .background(darkBlue)
                     .padding(paddingValue)
             ) {
-                Column(
-                    verticalArrangement = Arrangement.Center,
+                if (loading) {
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(darkBlue)
+                            .padding(16.dp)
+                            .verticalScroll(rememberScrollState())
+                    ) {
+                        Loading()
+                    }
+                } else Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(darkBlue)
                         .padding(16.dp)
+                        .verticalScroll(rememberScrollState())
                 ) {
                     Logo()
                     Spacer(modifier = Modifier.height(64.dp))

@@ -49,26 +49,31 @@ class HistoryViewModel(private val context: Context) : ViewModel() {
     private fun getUserQuestions() {
         _loading.value = true
         CoroutineScope(Dispatchers.IO).launch {
-            val response = service.getUserQuestions()
+            try {
+                val response = service.getUserQuestions()
 
-            withContext(Dispatchers.Main) {
-                if (response.isSuccessful) {
-                    val responseString = response.body()?.string()
-                    val gson = Gson()
-                    val listType = object : TypeToken<List<QuestionHistoryModel>>() {}.type
-                    val questions =
-                        gson.fromJson<List<QuestionHistoryModel>>(responseString, listType)
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        val responseString = response.body()?.string()
+                        val gson = Gson()
+                        val listType = object : TypeToken<List<QuestionHistoryModel>>() {}.type
+                        val questions =
+                            gson.fromJson<List<QuestionHistoryModel>>(responseString, listType)
 
-                    _history.value = questions
-                    calculatePercentages(questions)
-
-                } else {
-                    _history.value = listOf()
-                    _feedback.value = "Ocorreu um erro, por favor, tente novamente."
+                        _history.value = questions
+                        calculatePercentages(questions)
+                        _loading.value = false
+                    } else {
+                        _history.value = listOf()
+                        _feedback.value = "Não foi possível recuperar o seu histórico."
+                        _loading.value = false
+                    }
                 }
+            } catch (_: java.lang.Exception) {
+                _feedback.value = "Ocorreu um erro, por favor, tente novamente."
+                _loading.value = false
             }
         }
-        _loading.value = false
     }
 
     private fun calculatePercentages(questions: List<QuestionHistoryModel>) {
@@ -113,16 +118,16 @@ class HistoryViewModel(private val context: Context) : ViewModel() {
 
         _percentages.update { currentState ->
             currentState.copy(
-                humanas = (humanasCorrect * hundredPercentage) / if ((humanasCorrect + humanasWrong) == 0) 1 else {
+                humanas = (humanasCorrect * hundredPercentage) / if ((humanasCorrect + humanasWrong) == 0) 100 else {
                     (humanasCorrect + humanasWrong)
                 },
-                natureza = (naturezaCorrect * hundredPercentage) / if ((naturezaCorrect + naturezaWrong) == 0) 1 else {
+                natureza = (naturezaCorrect * hundredPercentage) / if ((naturezaCorrect + naturezaWrong) == 0) 100 else {
                     (naturezaCorrect + naturezaWrong)
                 },
-                linguagens = (linguagensCorrect * hundredPercentage) / if ((linguagensCorrect + linguagensWrong) == 0) 1 else {
+                linguagens = (linguagensCorrect * hundredPercentage) / if ((linguagensCorrect + linguagensWrong) == 0) 100 else {
                     (linguagensCorrect + linguagensWrong)
                 },
-                matematica = (matematicaCorrect * hundredPercentage) / if ((matematicaCorrect + matematicaWrong) == 0) 1 else {
+                matematica = (matematicaCorrect * hundredPercentage) / if ((matematicaCorrect + matematicaWrong) == 0) 100 else {
                     (matematicaCorrect + matematicaWrong)
                 },
             )
@@ -132,17 +137,24 @@ class HistoryViewModel(private val context: Context) : ViewModel() {
     fun eraseHistory() {
         _loading.value = true
         CoroutineScope(Dispatchers.IO).launch {
-            val response = service.eraseHistory()
-            withContext(Dispatchers.Main) {
-                if (response.isSuccessful) {
-                    _history.value = listOf()
-                    _feedback.value = "Histórico deletado com sucesso."
-                } else {
-                    _feedback.value = "Ocorreu um erro ao apagar o histórico."
+            try {
+                val response = service.eraseHistory()
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        _history.value = listOf()
+                        _feedback.value = "Histórico deletado com sucesso."
+                        _loading.value = false
+                    } else {
+                         _feedback.value = "Ocorreu um erro ao apagar o histórico."
+                        _loading.value = false
+                    }
                 }
+            } catch (_: java.lang.Exception) {
+                _feedback.value = "Ocorreu um erro, por favor, tente novamente."
+                _loading.value = false
             }
+
         }
-        _loading.value = false
     }
 
     fun resetFeedback() {

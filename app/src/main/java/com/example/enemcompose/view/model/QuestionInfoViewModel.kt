@@ -40,30 +40,36 @@ class QuestionInfoViewModel(id: String) : ViewModel() {
     private fun getOneQuestion(id: String) {
         _loading.value = true
         CoroutineScope(Dispatchers.IO).launch {
-            val response = service.getQuestionById(id)
+            try {
+                val response = service.getQuestionById(id)
 
-            withContext(Dispatchers.Main) {
-                if (response.isSuccessful) {
-                    val gson = Gson()
-                    val question =
-                        gson.fromJson(response.body()?.string(), QuestionModel::class.java)
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        val gson = Gson()
+                        val question =
+                            gson.fromJson(response.body()?.string(), QuestionModel::class.java)
 
-                    _uiState.update { currentState ->
-                        currentState.copy(
-                            answers = question.answers,
-                            ask = question.ask,
-                            rightAnswer = question.rightAnswer,
-                            id = question.id,
-                            url = question.url,
-                            name = question.name,
-                            description = question.description
-                        )
+                        _uiState.update { currentState ->
+                            currentState.copy(
+                                answers = question.answers,
+                                ask = question.ask,
+                                rightAnswer = question.rightAnswer,
+                                id = question.id,
+                                url = question.url,
+                                name = question.name,
+                                description = question.description
+                            )
+                        }
+                        _loading.value = false
+                    } else {
+                        _feedback.value = "Ocorreu um erro, por favor, tente novamente."
+                        _loading.value = false
                     }
-                } else {
-                    _feedback.value = "Ocorreu um erro, por favor, tente novamente."
                 }
+            } catch (_: java.lang.Exception) {
+                _feedback.value = "Ocorreu um erro desconhecido, por favor, tente novamente."
+                _loading.value = false
             }
-            _loading.value = false
         }
     }
 }

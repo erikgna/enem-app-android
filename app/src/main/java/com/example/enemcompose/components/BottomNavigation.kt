@@ -32,27 +32,40 @@ fun MyBottomNavigation(navController: NavController) {
     val iconSize = 24.dp
     val labelSize = 14.sp
 
-    val index = remember { mutableStateOf(0) }
+    val index = remember {
+        mutableStateOf(
+            if (navController.currentDestination.toString().contains("home")) {
+                1
+            } else {
+                2
+            }
+        )
+    }
 
     NavigationBar(
         containerColor = darkBlue,
     ) {
         NavigationBarItem(
-            selected = index.value == 0,
+            selected = index.value == 1,
             onClick = {
+                index.value = 1
                 navController.navigate(Screen.HomeScreen.route)
             },
             icon = {
                 Icon(
                     Icons.Rounded.Home, contentDescription = "Home Icon",
-                    tint = primaryBlue,
+                    tint = if (index.value == 1) primaryBlue else {
+                        white
+                    },
                     modifier = Modifier.size(iconSize)
                 )
             },
             label = {
                 Text(
                     text = "Inicio",
-                    color = primaryBlue,
+                    color = if (index.value == 1) primaryBlue else {
+                        white
+                    },
                     fontWeight = FontWeight.SemiBold,
                     fontSize = labelSize
                 )
@@ -60,21 +73,26 @@ fun MyBottomNavigation(navController: NavController) {
         )
         if (tokenManager.getToken() != null) {
             NavigationBarItem(
-                selected = index.value == 1,
+                selected = index.value == 2,
                 onClick = {
+                    index.value = 2
                     navController.navigate(Screen.HistoryScreen.route)
                 },
                 icon = {
                     Icon(
                         Icons.Rounded.List, contentDescription = "History Icon",
-                        tint = white,
+                        tint = if (index.value == 2) primaryBlue else {
+                            white
+                        },
                         modifier = Modifier.size(iconSize)
                     )
                 },
                 label = {
                     Text(
                         text = "Histórico",
-                        color = white,
+                        color = if (index.value == 2) primaryBlue else {
+                            white
+                        },
                         fontWeight = FontWeight.SemiBold,
                         fontSize = labelSize
                     )
@@ -83,10 +101,10 @@ fun MyBottomNavigation(navController: NavController) {
         }
         if (tokenManager.getToken() == null) {
             NavigationBarItem(
-                selected = index.value == 2,
+                selected = index.value == 3,
                 onClick = {
                     navController.navigate(Screen.LoginScreen.route)
-                    index.value = 2
+                    index.value = 3
                 },
                 icon = {
                     Icon(
@@ -106,7 +124,7 @@ fun MyBottomNavigation(navController: NavController) {
             )
         } else {
             NavigationBarItem(
-                selected = index.value == 2,
+                selected = index.value == 3,
                 onClick = {
                     tokenManager.deleteToken()
                     navController.navigate(Screen.LoginScreen.route)

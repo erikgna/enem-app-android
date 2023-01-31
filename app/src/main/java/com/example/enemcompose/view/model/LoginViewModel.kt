@@ -2,6 +2,8 @@ package com.example.enemcompose.view.model
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
+import androidx.navigation.NavController
+import com.example.enemcompose.Screen
 import com.example.enemcompose.question.AuthApi
 import com.example.enemcompose.utils.Constants
 import com.example.enemcompose.utils.TokenManager
@@ -43,7 +45,7 @@ class LoginViewModel(context: Context) : ViewModel() {
         .build()
     private val service = retrofit.create(AuthApi::class.java)
 
-    fun login(email: String, password: String) {
+    fun login(email: String, password: String, navController: NavController) {
         if (email.isEmpty() || password.isEmpty()) {
             _uiState.update { currentState ->
                 currentState.copy(
@@ -62,31 +64,47 @@ class LoginViewModel(context: Context) : ViewModel() {
 
         _loading.value = true
         CoroutineScope(Dispatchers.IO).launch {
-            val response = service.login(requestBody)
-            withContext(Dispatchers.IO) {
-                if (response.isSuccessful) {
-                    val gson = Gson()
-                    val token =
-                        gson.fromJson(response.body()?.string(), TokenModel::class.java)
+            try {
+                val response = service.login(requestBody)
+                withContext(Dispatchers.IO) {
+                    if (response.isSuccessful) {
+                        val gson = Gson()
+                        val token =
+                            gson.fromJson(response.body()?.string(), TokenModel::class.java)
 
-                    tokenManager.saveToken(token.token)
+                        tokenManager.saveToken(token.token)
 
-                } else if (response.code() < 500) {
-                    _uiState.update { currentState ->
-                        currentState.copy(
-                            error = "Email ou senha incorretos."
-                        )
-                    }
-                } else {
-                    _uiState.update { currentState ->
-                        currentState.copy(
-                            error = "Ocorreu um erro interno."
-                        )
+                        navController.navigate(Screen.HomeScreen.route) {
+                            popUpTo(Screen.HomeScreen.route) {
+                                inclusive = true
+                            }
+                        }
+                        _loading.value = false
+                    } else if (response.code() < 500) {
+                        _uiState.update { currentState ->
+                            currentState.copy(
+                                error = "Email ou senha incorretos."
+                            )
+                        }
+                        _loading.value = false
+                    } else {
+                        _uiState.update { currentState ->
+                            currentState.copy(
+                                error = "Ocorreu um erro no servidor."
+                            )
+                        }
+                        _loading.value = false
                     }
                 }
+            } catch (_: java.lang.Exception) {
+                _uiState.update { currentState ->
+                    currentState.copy(
+                        error = "Ocorreu um erro desconhecido."
+                    )
+                }
+                _loading.value = false
             }
         }
-        _loading.value = true
     }
 
     fun register(name: String, email: String, password: String, confirmPassword: String) {
@@ -119,23 +137,33 @@ class LoginViewModel(context: Context) : ViewModel() {
 
         _loading.value = true
         CoroutineScope(Dispatchers.IO).launch {
-            val response = service.createUser(requestBody)
-            withContext(Dispatchers.Main) {
-                if (response.code() < 500) {
-                    _uiState.update { currentState ->
-                        currentState.copy(
-                            error = "Dados inválidos."
-                        )
-                    }
-                } else {
-                    _uiState.update { currentState ->
-                        currentState.copy(
-                            error = "Ocorreu um erro interno."
-                        )
+            try {
+                val response = service.createUser(requestBody)
+                withContext(Dispatchers.Main) {
+                    if (response.code() < 500) {
+                        _uiState.update { currentState ->
+                            currentState.copy(
+                                error = "Dados inválidos."
+                            )
+                        }
+                        _loading.value = false
+                    } else {
+                        _uiState.update { currentState ->
+                            currentState.copy(
+                                error = "Ocorreu um erro no servidor."
+                            )
+                        }
+                        _loading.value = false
                     }
                 }
+            } catch (_: java.lang.Exception) {
+                _uiState.update { currentState ->
+                    currentState.copy(
+                        error = "Ocorreu um erro desconhecido."
+                    )
+                }
+                _loading.value = false
             }
         }
-        _loading.value = true
     }
 }

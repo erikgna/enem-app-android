@@ -69,7 +69,7 @@ fun HistoryScreen(navController: NavController) {
                 ) {
                     Loading()
                 }
-            } else if(history.isNotEmpty()) Column(
+            } else if (history.isNotEmpty()) Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(darkBlue)
@@ -85,28 +85,28 @@ fun HistoryScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(24.dp))
                 Score(
                     text = "Ciencias Humanas e suas Tecnologias",
-                    percentage = percentages.humanas.toFloat(),
+                    percentage = percentages.humanas,
                     modifier = Modifier
                         .size(size = 80.dp)
                         .align(Alignment.CenterHorizontally)
                 )
                 Score(
                     text = "Linguagens e suas Tecnologias",
-                    percentage = percentages.linguagens.toFloat(),
+                    percentage = percentages.linguagens,
                     modifier = Modifier
                         .size(size = 80.dp)
                         .align(Alignment.CenterHorizontally)
                 )
                 Score(
                     text = "Ciencias Naturais e suas Tecnologias",
-                    percentage = percentages.natureza.toFloat(),
+                    percentage = percentages.natureza,
                     modifier = Modifier
                         .size(size = 80.dp)
                         .align(Alignment.CenterHorizontally)
                 )
                 Score(
                     text = "Matemática e suas Tecnologias",
-                    percentage = percentages.matematica.toFloat(),
+                    percentage = percentages.matematica,
                     modifier = Modifier
                         .size(size = 80.dp)
                         .align(Alignment.CenterHorizontally)
@@ -184,7 +184,7 @@ fun HistoryItem(myColor: Color, text: String, click: () -> Unit) {
 }
 
 @Composable
-fun Score(percentage: Float, modifier: Modifier, text: String) {
+fun Score(percentage: Int, modifier: Modifier, text: String) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.Center,
@@ -201,12 +201,11 @@ fun Score(percentage: Float, modifier: Modifier, text: String) {
             modifier = modifier,
             color = green,
             strokeWidth = 4.dp,
-            progress = percentage,
-
-            )
+            progress = percentage.toFloat() / 100,
+        )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = (percentage * 100).toString(),
+            text = percentage.toString(),
             color = white,
             textAlign = TextAlign.Center,
             fontSize = 18.sp,

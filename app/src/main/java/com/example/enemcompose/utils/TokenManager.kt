@@ -1,6 +1,7 @@
 package com.example.enemcompose.utils
 
 import android.content.Context
+import com.auth0.android.jwt.JWT
 
 class TokenManager(context: Context) {
     private val prefs = context.getSharedPreferences(Constants.TOKEN_PATH, Context.MODE_PRIVATE)
@@ -12,10 +13,16 @@ class TokenManager(context: Context) {
     }
 
     fun getToken(): String? {
-        return prefs.getString(Constants.USER_TOKEN, null)
+        val token = prefs.getString(Constants.USER_TOKEN, null) ?: return null
+
+        val jwt = JWT(token);
+        if (jwt.isExpired(10)) {
+            return null
+        }
+        return token
     }
 
-    fun deleteToken(){
+    fun deleteToken() {
         prefs.edit().remove(Constants.USER_TOKEN).apply()
     }
 

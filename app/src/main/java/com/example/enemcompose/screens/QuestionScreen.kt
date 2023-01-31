@@ -18,8 +18,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.example.enemcompose.Logo
+import com.example.enemcompose.Screen
 import com.example.enemcompose.components.*
 import com.example.enemcompose.factories.QuestionViewModelFactory
 import com.example.enemcompose.ui.theme.*
@@ -35,7 +37,7 @@ const val e = "e"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun QuestionScreen(navController: NavController, random: Boolean) {
+fun QuestionScreen(navController: NavController, random: Boolean, countAndShowAd: () -> Unit) {
     val questionViewModel: QuestionViewModel =
         viewModel(factory = QuestionViewModelFactory(LocalContext.current, random))
 
@@ -43,18 +45,12 @@ fun QuestionScreen(navController: NavController, random: Boolean) {
 
     val error by questionViewModel.error.collectAsState()
     val choosen = remember { mutableStateOf("") }
-    val feedback = remember { mutableStateOf(error) }
     val isAnswer = remember { mutableStateOf(true) }
     val loading by questionViewModel.loading.collectAsState()
 
     fun checkAnswer() {
-        if(choosen.value == ""){
-            feedback.value = "Por favor, selecione uma resposta."
-            return
-        }
-
+        questionViewModel.addQuestion(choosen.value == uiState.rightAnswer, choosen = choosen.value)
         isAnswer.value = false
-        questionViewModel.addQuestion(choosen.value == uiState.rightAnswer)
     }
 
     fun nextQuestion() {
@@ -99,7 +95,7 @@ fun QuestionScreen(navController: NavController, random: Boolean) {
                     .background(darkBlue)
                     .padding(16.dp)
                     .verticalScroll(rememberScrollState())
-            )  {
+            ) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Logo()
                 Spacer(modifier = Modifier.height(40.dp))
@@ -118,7 +114,10 @@ fun QuestionScreen(navController: NavController, random: Boolean) {
                                     .padding(vertical = 8.dp)
                                     .align(alignment = Alignment.CenterHorizontally)
                             ) {
-                                AsyncImage(
+                                SubcomposeAsyncImage(
+                                    loading = {
+                                              Loading()
+                                    },
                                     modifier = Modifier
                                         .size(300.dp)
                                         .clip(RoundedCornerShape(8.dp)),
@@ -126,7 +125,8 @@ fun QuestionScreen(navController: NavController, random: Boolean) {
                                         .data(item)
                                         .crossfade(true).build(),
                                     contentScale = ContentScale.FillBounds,
-                                    contentDescription = "Image"
+                                    contentDescription = "Image",
+                                    
                                 )
                             }
                         } else {
@@ -143,7 +143,10 @@ fun QuestionScreen(navController: NavController, random: Boolean) {
                                     .padding(top = 16.dp)
                                     .align(alignment = Alignment.CenterHorizontally)
                             ) {
-                                AsyncImage(
+                                SubcomposeAsyncImage(
+                                    loading = {
+                                        Loading()
+                                    },
                                     modifier = Modifier
                                         .size(300.dp)
                                         .clip(RoundedCornerShape(16.dp)),
@@ -196,10 +199,22 @@ fun QuestionScreen(navController: NavController, random: Boolean) {
                 Spacer(modifier = Modifier.height(16.dp))
                 PrimaryButton(text = "Ver resposta", click = { checkAnswer() })
                 Spacer(modifier = Modifier.height(8.dp))
-                SecondaryButton(text = "Próxima pergunta", click = { nextQuestion() })
+                SecondaryButton(text = "Próxima pergunta", click = {
+                    nextQuestion()
+                    countAndShowAd()
+                })
 
-                if (feedback.value.isNotEmpty()) {
-                    MyAlertDialog(feedback.value) { feedback.value = "" }
+                if (error.isNotEmpty()) {
+                    MyAlertDialog(error) {
+                        questionViewModel.resetError()
+                        if (error.contains("rro")) {
+                            navController.navigate(Screen.HomeScreen.route) {
+                                popUpTo(Screen.QuestionScreen.route) {
+                                    inclusive = true
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -210,7 +225,7 @@ fun QuestionScreen(navController: NavController, random: Boolean) {
 fun AnswerItem(
     msg: String,
     isWrong: Boolean,
-    isAnswer: Boolean = true,
+    isAnswer: Boolean = false,
     click: () -> Unit = {},
     selected: Boolean = false
 ) {
@@ -259,7 +274,10 @@ fun AnswerItem(
         }
     ) {
         if (msg.contains(http)) {
-            AsyncImage(
+            SubcomposeAsyncImage(
+                loading = {
+                    Loading()
+                },
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
                     .fillMaxWidth()

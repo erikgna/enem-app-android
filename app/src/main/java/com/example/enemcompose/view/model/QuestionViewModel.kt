@@ -73,34 +73,50 @@ class QuestionViewModel(private val context: Context, private val random: Boolea
 
         _loading.value = true
         CoroutineScope(Dispatchers.IO).launch {
-            val response = service.getQuestion(requestBody)
-            withContext(Dispatchers.Main) {
-                if (response.isSuccessful) {
-                    val stringResponse = response.body()?.string()
-                    val gson = Gson()
-                    val question =
-                        gson.fromJson(stringResponse, QuestionModel::class.java)
+            try {
+                val response = service.getQuestion(requestBody)
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        val stringResponse = response.body()?.string()
+                        val gson = Gson()
+                        val question =
+                            gson.fromJson(stringResponse, QuestionModel::class.java)
 
-                    _uiState.update { currentState ->
-                        currentState.copy(
-                            answers = question.answers,
-                            ask = question.ask,
-                            rightAnswer = question.rightAnswer,
-                            id = question.id,
-                            url = question.url,
-                            name = question.name,
-                            description = question.description
-                        )
+                        _uiState.update { currentState ->
+                            currentState.copy(
+                                answers = question.answers,
+                                ask = question.ask,
+                                rightAnswer = question.rightAnswer,
+                                id = question.id,
+                                url = question.url,
+                                name = question.name,
+                                description = question.description
+                            )
+                        }
+                        _loading.value = false
+                    } else {
+                        _error.value = "Ocorreu um erro, por favor, tente novamente."
+                        _loading.value = false
                     }
-                } else {
-                    _error.value = "Ocorreu um erro, por favor, tente novamente."
                 }
+            } catch (_: java.lang.Exception) {
+                _error.value = "Ocorreu um erro desconhecido, por favor, tente novamente."
+                _loading.value = false
             }
             _loading.value = false
         }
     }
 
-    fun addQuestion(correct: Boolean) {
+    fun addQuestion(correct: Boolean, choosen: String) {
+        if (choosen == "") {
+            _error.value = "Por favor, selecione uma resposta."
+            return
+        }
+
+        if (tokenManager.getToken().isNullOrBlank()) {
+            return
+        }
+
         val jsonObject = JSONObject()
         jsonObject.put("id", _uiState.value.id)
         jsonObject.put("correct", correct)
@@ -110,13 +126,24 @@ class QuestionViewModel(private val context: Context, private val random: Boolea
 
         _loading.value = true
         CoroutineScope(Dispatchers.IO).launch {
-            val response = service.addNewQuestion(requestBody)
-            withContext(Dispatchers.Main) {
-                if (!response.isSuccessful) {
-                    _error.value = "Ocorreu um erro, por favor, tente novamente."
+            try {
+                val response = service.addNewQuestion(requestBody)
+                withContext(Dispatchers.Main) {
+                    if (!response.isSuccessful) {
+                        _error.value = "Ocorreu um erro, por favor, tente novamente."
+                        _loading.value = false
+                    }
                 }
+                _loading.value = false
+            } catch (_: java.lang.Exception) {
+                _error.value = "Ocorreu um erro desconhecido, por favor, tente novamente."
+                _loading.value = false
             }
+
         }
-        _loading.value = false
+    }
+
+    fun resetError() {
+        _error.value = ""
     }
 }

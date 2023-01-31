@@ -14,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -44,22 +46,25 @@ fun LoginScreen(
     fun callLogin() {
         loginViewModel.login(
             email = emailState.value,
-            password = passwordState.value
+            password = passwordState.value,
+            navController = navController
         )
 
         emailState.value = ""
         passwordState.value = ""
-
-        navController.navigate(Screen.HomeScreen.route) {
-            popUpTo(Screen.HomeScreen.route) {
-                inclusive = true
-            }
-        }
     }
 
     fun navigateToRegister() {
         navController.navigate(Screen.RegisterScreen.route) {
             popUpTo(Screen.LoginScreen.route) {
+                inclusive = true
+            }
+        }
+    }
+
+    fun navigateToHome() {
+        navController.navigate(Screen.HomeScreen.route) {
+            popUpTo(Screen.MainScreen.route) {
                 inclusive = true
             }
         }
@@ -135,9 +140,23 @@ fun LoginScreen(
                     Spacer(modifier = Modifier.height(24.dp))
                     PrimaryButton(text = "Entrar", click = { callLogin() })
                     Spacer(modifier = Modifier.height(16.dp))
+                    SecondaryButton(text = "Criar nova conta", click = { navigateToRegister() })
+                    Spacer(modifier = Modifier.height(16.dp))
                     ButtonDivider()
                     Spacer(modifier = Modifier.height(16.dp))
-                    SecondaryButton(text = "Criar nova conta", click = { navigateToRegister() })
+                    TextButton(
+                        onClick = { navigateToHome() },
+                        modifier = Modifier.align(alignment = Alignment.CenterHorizontally)
+                    ) {
+                        Text(
+                            text = "Entrar de forma anônima",
+                            textDecoration = TextDecoration.Underline,
+                            color = white,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         })

@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.example.enemcompose.Logo
 import com.example.enemcompose.components.Loading
@@ -112,7 +113,10 @@ fun QuestionInfoScreen(navController: NavController, id: String) {
                                     .padding(vertical = 8.dp)
                                     .align(alignment = Alignment.CenterHorizontally)
                             ) {
-                                AsyncImage(
+                                SubcomposeAsyncImage(
+                                    loading = {
+                                        Loading()
+                                    },
                                     modifier = Modifier
                                         .size(300.dp)
                                         .clip(RoundedCornerShape(8.dp)),
@@ -137,7 +141,10 @@ fun QuestionInfoScreen(navController: NavController, id: String) {
                                     .padding(top = 16.dp)
                                     .align(alignment = Alignment.CenterHorizontally)
                             ) {
-                                AsyncImage(
+                                SubcomposeAsyncImage(
+                                    loading = {
+                                        Loading()
+                                    },
                                     modifier = Modifier
                                         .size(300.dp)
                                         .clip(RoundedCornerShape(16.dp)),

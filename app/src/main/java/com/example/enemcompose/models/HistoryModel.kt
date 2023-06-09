@@ -9,7 +9,7 @@ data class PercentageModel(
 data class HistoryQuestion(
     val url: String,
     val name: String,
-    val rightAnswer: String
+    val rightanswer: String
 )
 
 data class QuestionHistoryModel(

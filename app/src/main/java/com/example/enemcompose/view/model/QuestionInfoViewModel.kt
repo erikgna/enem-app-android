@@ -53,7 +53,7 @@ class QuestionInfoViewModel(id: String) : ViewModel() {
                             currentState.copy(
                                 answers = question.answers,
                                 ask = question.ask,
-                                rightAnswer = question.rightAnswer,
+                                rightanswer = question.rightanswer,
                                 id = question.id,
                                 url = question.url,
                                 name = question.name,

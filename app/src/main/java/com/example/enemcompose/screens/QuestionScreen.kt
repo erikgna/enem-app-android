@@ -37,7 +37,7 @@ const val e = "e"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun QuestionScreen(navController: NavController, random: Boolean, countAndShowAd: () -> Unit) {
+fun QuestionScreen(navController: NavController, random: Boolean) {
     val questionViewModel: QuestionViewModel =
         viewModel(factory = QuestionViewModelFactory(LocalContext.current, random))
 
@@ -49,8 +49,10 @@ fun QuestionScreen(navController: NavController, random: Boolean, countAndShowAd
     val loading by questionViewModel.loading.collectAsState()
 
     fun checkAnswer() {
-        questionViewModel.addQuestion(choosen.value == uiState.rightAnswer, choosen = choosen.value)
-        isAnswer.value = false
+        if(choosen.value.isNotEmpty()){
+            questionViewModel.addQuestion(choosen.value == uiState.rightanswer, choosen = choosen.value)
+            isAnswer.value = false
+        }
     }
 
     fun nextQuestion() {
@@ -116,21 +118,22 @@ fun QuestionScreen(navController: NavController, random: Boolean, countAndShowAd
                             ) {
                                 SubcomposeAsyncImage(
                                     loading = {
-                                              Loading()
+                                        Loading()
                                     },
                                     modifier = Modifier
-                                        .size(300.dp)
+                                        .fillMaxWidth()
+                                        .aspectRatio(1f)
                                         .clip(RoundedCornerShape(8.dp)),
                                     model = ImageRequest.Builder(LocalContext.current)
                                         .data(item)
                                         .crossfade(true).build(),
                                     contentScale = ContentScale.FillBounds,
                                     contentDescription = "Image",
-                                    
-                                )
+
+                                    )
                             }
                         } else {
-                            Text(text = item, color = white, fontSize = 16.sp)
+                            Text(text = item.replace("<strong>", "").replace("</strong>", "").replace("<br />", ""), color = white, fontSize = 16.sp)
                         }
                     }
                 }
@@ -166,32 +169,32 @@ fun QuestionScreen(navController: NavController, random: Boolean, countAndShowAd
 
                 AnswerItem(
                     msg = uiState.answers.a,
-                    isWrong = uiState.rightAnswer != a,
+                    isWrong = uiState.rightanswer != a,
                     isAnswer = isAnswer.value,
                     click = { choosen.value = a },
                     selected = choosen.value == a,
                 )
                 AnswerItem(
                     msg = uiState.answers.b,
-                    isWrong = uiState.rightAnswer != b,
+                    isWrong = uiState.rightanswer != b,
                     isAnswer = isAnswer.value,
                     selected = choosen.value == b,
                     click = { choosen.value = b })
                 AnswerItem(
                     msg = uiState.answers.c,
-                    isWrong = uiState.rightAnswer != c,
+                    isWrong = uiState.rightanswer != c,
                     isAnswer = isAnswer.value,
                     selected = choosen.value == c,
                     click = { choosen.value = c })
                 AnswerItem(
                     msg = uiState.answers.d,
-                    isWrong = uiState.rightAnswer != d,
+                    isWrong = uiState.rightanswer != d,
                     isAnswer = isAnswer.value,
                     selected = choosen.value == d,
                     click = { choosen.value = d })
                 AnswerItem(
                     msg = uiState.answers.e,
-                    isWrong = uiState.rightAnswer != e,
+                    isWrong = uiState.rightanswer != e,
                     isAnswer = isAnswer.value,
                     selected = choosen.value == e,
                     click = { choosen.value = e })
@@ -201,7 +204,6 @@ fun QuestionScreen(navController: NavController, random: Boolean, countAndShowAd
                 Spacer(modifier = Modifier.height(8.dp))
                 SecondaryButton(text = "Próxima pergunta", click = {
                     nextQuestion()
-                    countAndShowAd()
                 })
 
                 if (error.isNotEmpty()) {
@@ -281,6 +283,7 @@ fun AnswerItem(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
                     .fillMaxWidth()
+                    .aspectRatio(1f)
                     .padding(16.dp),
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(msg.substring(10, msg.indexOf(">") - 3))

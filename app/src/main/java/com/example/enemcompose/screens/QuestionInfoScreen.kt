@@ -163,23 +163,23 @@ fun QuestionInfoScreen(navController: NavController, id: String) {
                 Spacer(modifier = Modifier.height(32.dp))
                 AnswerItem(
                     msg = uiState.answers.a,
-                    isWrong = uiState.rightAnswer != a
+                    isWrong = uiState.rightanswer != a
                 )
                 AnswerItem(
                     msg = uiState.answers.b,
-                    isWrong = uiState.rightAnswer != b
+                    isWrong = uiState.rightanswer != b
                 )
                 AnswerItem(
                     msg = uiState.answers.c,
-                    isWrong = uiState.rightAnswer != c,
+                    isWrong = uiState.rightanswer != c,
                 )
                 AnswerItem(
                     msg = uiState.answers.d,
-                    isWrong = uiState.rightAnswer != d,
+                    isWrong = uiState.rightanswer != d,
                 )
                 AnswerItem(
                     msg = uiState.answers.e,
-                    isWrong = uiState.rightAnswer != e,
+                    isWrong = uiState.rightanswer != e,
                 )
             }
         }

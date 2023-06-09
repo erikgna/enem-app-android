@@ -86,7 +86,7 @@ class QuestionViewModel(private val context: Context, private val random: Boolea
                             currentState.copy(
                                 answers = question.answers,
                                 ask = question.ask,
-                                rightAnswer = question.rightAnswer,
+                                rightanswer = question.rightanswer,
                                 id = question.id,
                                 url = question.url,
                                 name = question.name,

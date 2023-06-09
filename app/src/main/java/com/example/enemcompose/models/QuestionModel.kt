@@ -7,7 +7,7 @@ data class QuestionModel (
     val description: String = "",
     val ask: String = "",
     val answers: Answers = Answers(a = "", b="", c="", d="", e=""),
-    val rightAnswer: String = ""
+    val rightanswer: String = ""
 )
 
 data class Answers (

@@ -11,18 +11,9 @@ import com.example.enemcompose.screens.*
 import com.example.enemcompose.utils.TokenManager
 
 @Composable
-fun Navigation(showAdd: () -> Unit) {
+fun Navigation() {
     val tokenManager = TokenManager(LocalContext.current)
     val navController = rememberNavController()
-    val adCount = rememberSaveable { mutableStateOf(0) }
-
-    fun countAndShowAd(){
-        if(adCount.value == 11){
-            adCount.value = 0
-            showAdd()
-        }
-        adCount.value++
-    }
 
     NavHost(
         navController = navController,
@@ -48,7 +39,7 @@ fun Navigation(showAdd: () -> Unit) {
             val random: String? = it.arguments?.getString("random")
 
             QuestionScreen(
-                navController = navController, random?.contains("true") ?: true, countAndShowAd = { countAndShowAd() }
+                navController = navController, random?.contains("true") ?: true
             )
         }
         composable(route = Screen.HistoryScreen.route) {
